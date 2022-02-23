@@ -1,0 +1,13 @@
+Django==3.2.4
+django-allauth==0.45.0
+django-core==1.4.1
+django-cors-headers==3.8.0
+django-environ==0.4.5
+django-filter==21.1
+django-heroku==0.3.1
+django-rest-auth==0.9.5
+django-six==1.0.4
+django-templated-mail==1.1.1
+djangorestframework==3.12.4
+djangorestframework-jwt==1.11.0
+djangorestframework-simplejwt==4.6.0
