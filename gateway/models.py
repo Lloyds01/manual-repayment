@@ -34,3 +34,10 @@ class LoanRepayment(models.Model):
 
     def __str__(self):
         return self.phone
+
+class Merge(models.Model):
+    payment_id              = models.CharField(max_length=225)
+    email                   = models.EmailField(unique=True)
+    is_staff                = models.BooleanField()
+    is_approved             = models.BooleanField()
+    is_approved_all         = models.BooleanField()
