@@ -1,8 +1,6 @@
-from venv import create
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 # Create your models here.
-
 
 class CustomUserManager(BaseUserManager):
 
@@ -28,9 +26,7 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError('superuser must have is_superuser=True')
 
-        return self._create_user(email,password,**extra_fields) 
-
-
+        return self._create_user(email,password,**extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email                   = models.EmailField(unique=True)
@@ -47,6 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.name
+
 
 
 

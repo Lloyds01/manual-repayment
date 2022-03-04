@@ -11,7 +11,9 @@ urlpatterns = [
     path("repayment/", Repayment.as_view()),
     path('password/', Changepassword.as_view()),
     path('secure/', Getsecuredinfo.as_view()),
-    path("approved/", approved_repayment),
-    path('pending/',pending_repayment)
+    path("approved/",approved_repayment),
+    path('pending/',pending_repayment),
+    path('approve/',Approve_one),
+    path('approve_all/',Approve_all)
 
 ]

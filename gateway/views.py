@@ -1,3 +1,4 @@
+import email
 from logging import raiseExceptions
 import random
 import string
@@ -8,7 +9,7 @@ from .models import Jwt, LoanRepayment
 from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework.views import APIView
-from .serializers import ChangePasswordSerializer, LoginSerializer, RegisterSerializer, RepaymentSerializer, ResfreshSerializer
+from .serializers import *
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -97,10 +98,6 @@ class RefreshView(APIView):
         active_jwt.save()
         return Response({'access': access, 'refresh':refresh})
 
-
-
-    
-
 class Getsecuredinfo(APIView): 
     authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
@@ -153,7 +150,7 @@ class Changepassword(generics.UpdateAPIView):
                     'status':'success',
                     'code':status.HTTP_200_OK,
 
-                    'messahe':'password updated successfully',
+                    'message':'password updated successfully',
 
                     'data':[]
                 }
@@ -181,17 +178,79 @@ def pending_repayment(request):
         print(serializer.data)
         return Response(serializer.data)
 
+    
+@api_view(['POST'])
+def Approve_one(request):
+    if request.method == "POST":
+        serializer = ApproveoneSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
 
-# def approve_repayment(request):
+        user_designation = serializer.validated_data["is_staff"]
+        payment_id = int(serializer.validated_data["payment_id"])
+        is_approved = serializer.validated_data["is_approved"]
+        email = serializer.validated_data["email"]
+        user = CustomUser.objects.filter(email=email, is_staff = user_designation)
+        if user:
+            print('##################')
+            print(user.values())
+            loan = LoanRepayment.objects.filter(id=payment_id).update(is_approved=is_approved)
+            print(loan)
+            result = LoanRepayment.objects.filter(id=payment_id)
+            print('##################')
+            print(result.values())
+            response = {
+                    'status':'success',
+                    
+                    'message':'payment approval updated'
+                }
+        else:
+            response = {
+                    'status':'unsuccessful',
+                    
+                    'message':'payment approval not successful'
+                }
+        return Response(data=response, status=status.HTTP_201_CREATED)
+    
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#     if request.method == 'POST':
-#         pending = LoanRepayment.objects.filter(is_approved = False)
-#         approve = 
+
+@api_view(['POST'])
+def Approve_all(request):
+    if request.method == "POST":
+        serializer = ApproveallSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_designation = serializer.validated_data["is_staff"]
+        approve_all = serializer.validated_data["is_approved_all"]
+        email = serializer.validated_data["email"]
+        user = CustomUser.objects.filter(email=email, is_staff = user_designation)
+        if user and approve_all:
+            print('##################')
+            print(user.values())
+            loan = LoanRepayment.objects.filter(is_approved=False).update(is_approved=True)
+            print(loan)
+            response = {
+                    'status':'success',
+                    
+                    'message':'all payment approved successfully'
+                }
+        else:
+            response = {
+                    'status':'unsuccessful',
+                    
+                    'message':'you do not have permission to carry out this action'
+                }
+        return Response(data=response, status=status.HTTP_201_CREATED)
+    
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
+# @staticmethod
+# def repayment_check(self, request):
 
-
-
+#     if request.method == "POST":
 
 

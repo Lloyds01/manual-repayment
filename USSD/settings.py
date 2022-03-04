@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'gateway',
 ]
 
+# REST_FRAMEWORK = (
+#     "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.athentication.Authentication")
+# )
 
 AUTH_USER_MODEL = 'repayment.CustomUser'
 
