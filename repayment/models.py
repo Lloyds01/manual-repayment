@@ -30,7 +30,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email                   = models.EmailField(unique=True)
-    name                    = models.CharField(max_length=25)
+    name                    = models.CharField(max_length=100)
     created_at              = models.DateTimeField(auto_now_add=True)
     updated_at              = models.DateTimeField(auto_now=True)
     is_staff                = models.BooleanField(default=False)
@@ -43,7 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.name
-
+ 
 
 
 
