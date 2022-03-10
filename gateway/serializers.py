@@ -1,13 +1,21 @@
-from dataclasses import field
-from hashlib import new
-from pyexpat import model
+from rest_framework.response import Response
 from gateway.models import LoanRepayment, Merge
 from rest_framework import serializers
 from repayment.models import CustomUser
+from django.contrib.auth import login
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
+
+    # def userlogin(self, args,request):
+    #     email = args.get('email',None)
+    #     password = args.get("password",None)
+    #     user = CustomUser.objects.filter(email=email,password=password).exists()
+    #     if user:
+    #         login(request, user)
+
+    #     return Response('user logged in')
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -23,7 +31,7 @@ class RepaymentSerializer(serializers.ModelSerializer):
         fields = ["id", "phone", "amount","remita_id", "payment_date","payment_method"]
 
 class ChangePasswordSerializer(serializers.Serializer):
-    model = CustomUser
+    # model = CustomUser
     old_password = serializers.CharField()
     new_password = serializers.CharField()
 
