@@ -47,7 +47,7 @@ class LoginView(APIView):
         user = authenticate(
             email=serializer.validated_data["email"], 
             password=serializer.validated_data['password']) #checking if user exist and log them in
-        print(user.email)
+        
        
         if not user:
             
@@ -147,7 +147,7 @@ class Changepassword(generics.UpdateAPIView):
         return obj
     
     def update(self, request, *args, **kwargs):
-        print("54464646633737373737733")
+        
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

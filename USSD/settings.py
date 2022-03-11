@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-
+from lib2to3.pgen2.token import NAME
 from pathlib import Path
 from decouple import config 
 import django_heroku
