@@ -28,7 +28,7 @@ class ResfreshSerializer(serializers.Serializer):
 class RepaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanRepayment
-        fields = ["id", "phone", "amount","remita_id", "payment_date","payment_method"]
+        fields = ["user", "id", "phone", "amount","remita_id", "payment_date","payment_method"]
 
 class ChangePasswordSerializer(serializers.Serializer):
     # model = CustomUser

@@ -121,21 +121,22 @@ class Repayment(generics.ListCreateAPIView):
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
 
-    def approved_repayment(self,request, queryset=None):
-        if request.method == "GET":
-            approved = LoanRepayment.objects.filter(is_approved = True)
-            serializer = RepaymentSerializer(approved, many=True)
-            print("--------------------")
-            print(serializer.data)
-            return Response(serializer.data)
+    # def approved_repayment(self,request, queryset=None):
+    #     if request.method == "GET":
+    #         approved = LoanRepayment.objects.filter(is_approved = True)
+    #         serializer = RepaymentSerializer(approved, many=True)
 
-    def pending_repayment(self, request, queryset=None):
-        if request.method == "GET":
-            pending = LoanRepayment.objects.filter(is_approved = False)
-            serializer = RepaymentSerializer(pending, many=True)
-            print("--------------------")
-            print(serializer.data)
-            return Response(serializer.data)
+    #         print("--------------------")
+    #         print(serializer.data)
+    #         return Response(serializer.data)
+
+    # def pending_repayment(self, request, queryset=None):
+    #     if request.method == "GET":
+    #         pending = LoanRepayment.objects.filter(is_approved = False)
+    #         serializer = RepaymentSerializer(pending, many=True)
+    #         print("--------------------")
+    #         print(serializer.data)
+    #         return Response(serializer.data)
 
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
