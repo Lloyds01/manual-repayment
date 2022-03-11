@@ -65,6 +65,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# REST_FRAMEWORK ={
+    # "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.authentication.Authentication")
+# }
+
 ROOT_URLCONF = 'USSD.urls'
 
 TEMPLATES = [

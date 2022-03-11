@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework.views import APIView
 from .serializers import *
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -37,17 +37,24 @@ def get_refresh_token():
      )
 
 class LoginView(APIView):
+    
     serializer_class = LoginSerializer
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data) #request the serialized data
         serializer.is_valid(raise_exception=True)  #validate serializer
-        print(serializer.validated_data)
-        user =authenticate(
-            username=serializer.validated_data["email"], 
+        
+        user = authenticate(
+            email=serializer.validated_data["email"], 
             password=serializer.validated_data['password']) #checking if user exist and log them in
-
+        print(user.email)
+       
         if not user:
+            
             return Response({'error':'invalid email or password'}, status="400")
+
+        else:
+            login(request, user)
 
         Jwt.objects.filter(user_id=user.id).delete()    #validation and delete 
 
@@ -55,9 +62,12 @@ class LoginView(APIView):
         refresh = get_refresh_token()
 
         Jwt.objects.create(
-            user_id =user.id,access=access.decode(), refresh = refresh.decode())
+            user_id = user.id,access=access.decode(), refresh = refresh.decode())
 
-        return Response({'access': access, 'refresh':refresh})
+
+        # return Response({'user_email':user.email})
+        return Response({'user_email':user.email,'access': access, 'refresh':refresh})
+
 
 
 class RegisterView(APIView):
@@ -135,26 +145,36 @@ class Changepassword(generics.UpdateAPIView):
     def get_object(self, queryset=None):
         obj =self.request.user
         return obj
-
+    
     def update(self, request, *args, **kwargs):
+        print("54464646633737373737733")
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(self):
+        if serializer.is_valid():
             #check old password
             if not self.object.check_password(serializer.data.get('old_password')):
-                #set password hashes te password tat user will get
-                self.object.set_password(serializer.data.get('new_password'))  
-
-                self.object.save()
                 response = {
-                    'status':'success',
-                    'code':status.HTTP_200_OK,
+                    'status':'failed',
+                    'code':status.HTTP_400_BAD_REQUEST,
 
-                    'message':'password updated successfully',
+                    'message':'password failed',
 
                     'data':[]
                 }
                 return Response(response)
+            #set password hashes the password that user will get
+            self.object.set_password(serializer.data.get('new_password'))  
+
+            self.object.save()
+            response = {
+                'status':'success',
+                'code':status.HTTP_200_OK,
+
+                'message':'password updated successfully',
+
+                'data':[]
+            }
+            return Response(response)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -164,7 +184,7 @@ def approved_repayment(request):
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(is_approved = True)
         serializer = RepaymentSerializer(approved, many=True)
-        print("--------------------")
+        # print("--------------------")
         print(serializer.data)
         return Response(serializer.data)
 
@@ -174,7 +194,7 @@ def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved = False)
         serializer = RepaymentSerializer(pending, many=True)
-        print("--------------------")
+        # print("--------------------")
         print(serializer.data)
         return Response(serializer.data)
 
@@ -191,12 +211,12 @@ def Approve_one(request):
         email = serializer.validated_data["email"]
         user = CustomUser.objects.filter(email=email, is_staff = user_designation)
         if user:
-            print('##################')
+            
             print(user.values())
             loan = LoanRepayment.objects.filter(id=payment_id).update(is_approved=is_approved)
             print(loan)
             result = LoanRepayment.objects.filter(id=payment_id)
-            print('##################')
+            
             print(result.values())
             response = {
                     'status':'success',
@@ -226,7 +246,7 @@ def Approve_all(request):
         email = serializer.validated_data["email"]
         user = CustomUser.objects.filter(email=email, is_staff = user_designation)
         if user and approve_all:
-            print('##################')
+            
             print(user.values())
             loan = LoanRepayment.objects.filter(is_approved=False).update(is_approved=True)
             print(loan)
@@ -246,6 +266,26 @@ def Approve_all(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+# def reset_password(request):   #WHICH FUNCTION IS CALLING THIS AND WHICH ENDPOINT
+
+#     if request.method == "GET":
+#         uid = request.GET.get('uid')
+#         token = request.GET.get('token')
+#         context = {"uid": uid, "token": token}
+#         return render(request, "reset_password.html", context=context)
+
+#     password = request.POST.get('password')
+#     uid = request.POST.get('uid')
+#     token = request.POST.get('token')
+#     protocol = 'https://' if request.is_secure() else 'http://'
+#     web_url = protocol + "whispersms.xyz"
+#     post_url = web_url + "/auth/users/reset_password_confirm/"
+#     post_data = {'uid': uid, 'token': token, 'new_password': password}
+#     result = requests.post(post_url, json=post_data, headers={
+#         "content-type": "application/json"})
+
+#     return render(request, "redirect.html")
 
 
 # @staticmethod
