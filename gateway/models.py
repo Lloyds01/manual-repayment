@@ -22,6 +22,7 @@ class LoanRepayment(models.Model):
         ('OTHER', 'Other')
 
     )
+
     user                = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True )
     phone               = models.CharField(max_length=20, null=True, blank=True)
     amount              = models.CharField(max_length=50)
