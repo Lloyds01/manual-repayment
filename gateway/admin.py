@@ -10,7 +10,7 @@ admin.site.register(Jwt)
 
 @admin.register(LoanRepayment)
 class RepaymentAdmin(ImportExportModelAdmin):
-    list_display = ['user', 'id', 'phone','amount','remita_mandate','payment_method','is_approved','payment_date',"entry_date"]
+    list_display = ['user', 'id', 'phone','amount','remita_mandate_id','payment_method','is_approved','payment_date',"entry_date"]
 
     search_fields = ['phone']
 

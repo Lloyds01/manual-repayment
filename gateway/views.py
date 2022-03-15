@@ -19,6 +19,24 @@ from .authentication import Authentication
 
 
 
+@staticmethod
+def check_repayment(request):
+    if request.method == "POST":
+        serializer = RepaymentSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+
+        payment_date = serializer.validated_data["payment_date"]
+        amount = serializer.validated_data["amount"]
+        remita_manadate = serializer.validated_data["remita_manadate"]
+        is_flagged = (serializer.validated_data["is_flagged"])
+        payment = LoanRepayment.objects.filter(payment_date=payment_date, amount=amount, remita_manadate=remita_manadate).exists()
+        if payment:
+            is_flagged == "True"
+            response = ({'message':'This repayment exist already would you like to proceed'})
+            return response
+
+
+
 def get_random(lenght):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
 
@@ -118,10 +136,11 @@ class Getsecuredinfo(APIView):
 
 
 class Repayment(generics.ListCreateAPIView):
-
+    # def post():
+        
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
-
+    
 
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
