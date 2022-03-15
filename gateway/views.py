@@ -118,24 +118,10 @@ class Getsecuredinfo(APIView):
 
 
 class Repayment(generics.ListCreateAPIView):
+
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
 
-    def approved_repayment(self,request, queryset=None):
-        if request.method == "GET":
-            approved = LoanRepayment.objects.filter(is_approved = True)
-            serializer = RepaymentSerializer(approved, many=True)
-            print("--------------------")
-            print(serializer.data)
-            return Response(serializer.data)
-
-    def pending_repayment(self, request, queryset=None):
-        if request.method == "GET":
-            pending = LoanRepayment.objects.filter(is_approved = False)
-            serializer = RepaymentSerializer(pending, many=True)
-            print("--------------------")
-            print(serializer.data)
-            return Response(serializer.data)
 
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
@@ -184,7 +170,7 @@ def approved_repayment(request):
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(is_approved = True)
         serializer = RepaymentSerializer(approved, many=True)
-        # print("--------------------")
+        
         print(serializer.data)
         return Response(serializer.data)
 
@@ -194,7 +180,7 @@ def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved = False)
         serializer = RepaymentSerializer(pending, many=True)
-        # print("--------------------")
+        
         print(serializer.data)
         return Response(serializer.data)
 
@@ -267,30 +253,5 @@ def Approve_all(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# def reset_password(request):   #WHICH FUNCTION IS CALLING THIS AND WHICH ENDPOINT
-
-#     if request.method == "GET":
-#         uid = request.GET.get('uid')
-#         token = request.GET.get('token')
-#         context = {"uid": uid, "token": token}
-#         return render(request, "reset_password.html", context=context)
-
-#     password = request.POST.get('password')
-#     uid = request.POST.get('uid')
-#     token = request.POST.get('token')
-#     protocol = 'https://' if request.is_secure() else 'http://'
-#     web_url = protocol + "whispersms.xyz"
-#     post_url = web_url + "/auth/users/reset_password_confirm/"
-#     post_data = {'uid': uid, 'token': token, 'new_password': password}
-#     result = requests.post(post_url, json=post_data, headers={
-#         "content-type": "application/json"})
-
-#     return render(request, "redirect.html")
-
-
-# @staticmethod
-# def repayment_check(self, request):
-
-#     if request.method == "POST":
 
 
