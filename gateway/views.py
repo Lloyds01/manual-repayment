@@ -28,13 +28,10 @@ def check_repayment(request):
         payment_date = serializer.validated_data["payment_date"]
         amount = serializer.validated_data["amount"]
         remita_manadate = serializer.validated_data["remita_manadate"]
-        is_flagged = (serializer.validated_data["is_flagged"])
-        payment = LoanRepayment.objects.filter(payment_date=payment_date, amount=amount, remita_manadate=remita_manadate).exists()
-        if payment:
-            is_flagged == "True"
-            response = ({'message':'This repayment exist already would you like to proceed'})
-            return response
-
+        print(f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
+        # is_flagged = (serializer.validated_data["is_flagged"])
+        response = LoanRepayment.flag_repayment(payment_date, amount, remita_manadate)
+        return response
 
 
 def get_random(lenght):
@@ -136,11 +133,23 @@ class Getsecuredinfo(APIView):
 
 
 class Repayment(generics.ListCreateAPIView):
-    # def post():
-        
+
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
     
+
+@api_view(['POST'])
+def post_repayment(request):
+    if request.method == "POST":
+        serializer = RepaymentSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+        message = {
+                "status": "Created"
+            }
+        return Response(data=message, status='200')
+
 
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
@@ -187,7 +196,7 @@ class Changepassword(generics.UpdateAPIView):
 @api_view(['GET'])
 def approved_repayment(request):
     if request.method == "GET":
-        approved = LoanRepayment.objects.filter(is_approved = True)
+        approved = LoanRepayment.objects.filter(is_approved = True, is_mandate_closed = False)
         serializer = RepaymentSerializer(approved, many=True)
         
         print(serializer.data)
