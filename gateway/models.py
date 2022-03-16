@@ -49,7 +49,7 @@ class LoanRepayment(models.Model):
         
         print(f'Loan Repayment: {payment}')
         if payment.exists():
-            is_flagged = "True"
+            is_flagged = True
             print(f'is flagged value passed: {is_flagged}')
             result = payment.update(is_flagged = is_flagged)
             print(f'update query result: {result}')

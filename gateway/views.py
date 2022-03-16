@@ -133,22 +133,27 @@ class Getsecuredinfo(APIView):
 
 
 class Repayment(generics.ListCreateAPIView):
-
-    queryset = LoanRepayment.objects.all()
+    
+    def get_queryset(self):
+        user = self.request.user
+        return user.accounts.all()
+    
+    # queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
+
     
 
-@api_view(['POST'])
-def post_repayment(request):
-    if request.method == "POST":
-        serializer = RepaymentSerializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
+# @api_view(['POST'])
+# def post_repayment(request):
+#     if request.method == "POST":
+#         serializer = RepaymentSerializer(data = request.data)
+#         serializer.is_valid(raise_exception=True)
 
-        serializer.save()
-        message = {
-                "status": "Created"
-            }
-        return Response(data=message, status='200')
+#         serializer.save()
+#         message = {
+#                 "status": "Created"
+#             }
+#         return Response(data=message, status='200')
 
 
 class Changepassword(generics.UpdateAPIView):
