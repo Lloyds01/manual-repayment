@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from lib2to3.pgen2.token import NAME
 from pathlib import Path
-from decouple import config 
+from decouple import config
 import django_heroku
 import environ
 import os
@@ -31,7 +31,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['https://manual-repayment.herokuapp.com/', 'manual-repayment.herokuapp.com', '*']
+ALLOWED_HOSTS = ['https://manual-repayment.herokuapp.com/',
+                 'manual-repayment.herokuapp.com', '*']
 
 
 # Application definition
@@ -65,13 +66,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+
 ]
 
-
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 # REST_FRAMEWORK ={
-    # "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.authentication.Authentication")
+# "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.authentication.Authentication")
 # }
 
 ROOT_URLCONF = 'USSD.urls'
@@ -99,7 +100,6 @@ WSGI_APPLICATION = 'USSD.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -108,7 +108,7 @@ WSGI_APPLICATION = 'USSD.wsgi.application'
 # }
 
 if DEBUG:
-    ### demo database
+    # demo database
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -120,7 +120,7 @@ if DEBUG:
         }
     }
 else:
-    #### live database
+    # live database
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -128,7 +128,7 @@ else:
             'USER': '',
             'HOST': 'localhost',
             'PORT': "",
-            'PASSWORD':''
+            'PASSWORD': ''
         }
     }
 
@@ -178,5 +178,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # print(DATABASES)
 # print(True if DEBUG else False)
 django_heroku.settings(locals())
-
-
