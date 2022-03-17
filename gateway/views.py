@@ -36,11 +36,11 @@ def check_repayment(request):
             payment_date, amount, remita_manadate)
         return response
 
-
+@csrf_exempt
 def get_random(lenght):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
 
-
+@csrf_exempt
 def get_access_token(payload):
     return jwt.encode(
         # set expiry time for the access token
@@ -49,7 +49,7 @@ def get_access_token(payload):
         algorithm="HS256"  # lenght of jwt token
     )
 
-
+@csrf_exempt
 def get_refresh_token():
     return jwt.encode(
         {'exp': datetime.now() + timedelta(days=365), 'data': get_random(10)

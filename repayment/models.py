@@ -39,7 +39,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff                = models.BooleanField(default=False)
     is_superuser            = models.BooleanField(default=False)
     is_active               = models.BooleanField(default=True)
-    designation             = models.CharField(max_length=30, default="admin")
+    designation             = models.CharField(max_length=30, default="Admin")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELD = []
