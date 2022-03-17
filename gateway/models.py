@@ -45,25 +45,6 @@ class LoanRepayment(models.Model):
     def __str__(self):
         return self.phone
 
-    def flag_repayment(payment_date, amount, remita_mandate_id):
-
-        payment = LoanRepayment.objects.filter(
-            payment_date=payment_date, amount=amount, remita_mandate_id=remita_mandate_id)
-
-        print(f'Loan Repayment: {payment}')
-        if payment.exists():
-            is_flagged = True
-            print(f'is flagged value passed: {is_flagged}')
-            result = payment.update(is_flagged=is_flagged)
-            print(f'update query result: {result}')
-            try:
-                result < 1
-            except:
-                result = payment.update(is_flagged=is_flagged)
-            else:
-                response = (
-                    {'message': 'This repayment exist already would you like to proceed'})
-        return response
 
 
 class Merge(models.Model):
