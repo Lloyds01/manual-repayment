@@ -18,15 +18,15 @@ class Jwt(models.Model):
 
 class LoanRepayment(models.Model):
 
-    choice = (
+    # choice = (
 
-        ('TRANSFER', 'Transfer'),
-        ('BANK DEPOSIT', 'Bank Deposit'),
-        ('CASH', 'Cash'),
-        ('CHEQUE', 'Cheque'),
-        ('OTHER', 'Other')
+    #     ('TRANSFER', 'Transfer'),
+    #     ('BANK DEPOSIT', 'Bank Deposit'),
+    #     ('CASH', 'Cash'),
+    #     ('CHEQUE', 'Cheque'),
+    #     ('OTHER', 'Other')
 
-    )
+    # )
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
@@ -38,7 +38,7 @@ class LoanRepayment(models.Model):
     is_approved = models.BooleanField(default=False)
     is_flagged = models.BooleanField(default=False)
     payment_method = models.CharField(
-        max_length=30, choices=choice, default=choice[0][0])
+        max_length=30)
     is_mandate_closed = models.BooleanField(default=False)
     is_duplicate = models.BooleanField(default=False)
 

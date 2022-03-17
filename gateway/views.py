@@ -230,19 +230,6 @@ class ConfirmDuplicateRepayment(APIView):
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-def post_repayment(request):
-    if request.method == "POST":
-        serializer = RepaymentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.save()
-        message = {
-            "status": "Created"
-        }
-        return Response(data=message, status='200')
-
-
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = CustomUser

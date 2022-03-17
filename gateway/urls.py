@@ -15,11 +15,6 @@ urlpatterns = [
     path('pending/', pending_repayment),
     path('approve_one/', Approve_one),
     path('approve_all/', Approve_all),
-    path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view()),
-    # path('check_repayment/', check_repayment)
-
-
-
-
+    path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view())
 
 ]
