@@ -37,8 +37,7 @@ class LoanRepayment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_approved = models.BooleanField(default=False)
     is_flagged = models.BooleanField(default=False)
-    payment_method = models.CharField(
-        max_length=30)
+    payment_method = models.CharField(max_length=100, default="Transfer")
     is_mandate_closed = models.BooleanField(default=False)
     is_duplicate = models.BooleanField(default=False)
 
