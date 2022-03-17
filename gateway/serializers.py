@@ -25,7 +25,7 @@ class RepaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanRepayment
         fields = ["user", "id", "phone", "amount",
-                  "remita_mandate_id", "payment_date", "payment_method"]
+                  "remita_mandate_id", "payment_date"]
 
 
 class ChangePasswordSerializer(serializers.Serializer):
