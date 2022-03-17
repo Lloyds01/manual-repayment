@@ -16,6 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.decorators import api_view
 from .authentication import Authentication
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 @staticmethod
@@ -34,11 +36,11 @@ def check_repayment(request):
             payment_date, amount, remita_manadate)
         return response
 
-
+@csrf_exempt
 def get_random(lenght):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
 
-
+@csrf_exempt
 def get_access_token(payload):
     return jwt.encode(
         # set expiry time for the access token
@@ -47,7 +49,7 @@ def get_access_token(payload):
         algorithm="HS256"  # lenght of jwt token
     )
 
-
+@csrf_exempt
 def get_refresh_token():
     return jwt.encode(
         {'exp': datetime.now() + timedelta(days=365), 'data': get_random(10)
@@ -56,9 +58,9 @@ def get_refresh_token():
         algorithm="HS256"  # lenght of jwt token
     )
 
-
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
-
+    
     serializer_class = LoginSerializer
 
     def post(self, request):
@@ -102,6 +104,8 @@ class RegisterView(APIView):
         return Response({'success': 'User created'})
 
 
+
+@method_decorator(csrf_exempt, name="dispatch")
 class RefreshView(APIView):
     serializer_class = ResfreshSerializer
 
@@ -128,6 +132,7 @@ class RefreshView(APIView):
         return Response({'access': access, 'refresh': refresh})
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class Getsecuredinfo(APIView):
     authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
@@ -137,6 +142,7 @@ class Getsecuredinfo(APIView):
         return Response({'data': 'this is a secured info'})
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class Repayment(generics.ListCreateAPIView):
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
@@ -171,7 +177,7 @@ class Repayment(generics.ListCreateAPIView):
             data = {
                 "status": status.HTTP_302_FOUND,
                 "phone": phone,
-                "message": "we already have this record of repayment"
+                "message": "This repayment transaction already exist do you want to proceed?"
             }
 
             request.session["phone"] = phone
@@ -199,7 +205,7 @@ class Repayment(generics.ListCreateAPIView):
         serializer = RepaymentSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+@method_decorator(csrf_exempt, name="dispatch")
 class ConfirmDuplicateRepayment(APIView):
     def post(self, request):
         serializer = ConfirmRepaymentSerializer(data=request.data)
@@ -229,20 +235,7 @@ class ConfirmDuplicateRepayment(APIView):
 
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-
-@api_view(['POST'])
-def post_repayment(request):
-    if request.method == "POST":
-        serializer = RepaymentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.save()
-        message = {
-            "status": "Created"
-        }
-        return Response(data=message, status='200')
-
-
+@method_decorator(csrf_exempt, name="dispatch")
 class Changepassword(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = CustomUser
@@ -285,6 +278,7 @@ class Changepassword(generics.UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['GET'])
 def approved_repayment(request):
     if request.method == "GET":
@@ -296,6 +290,7 @@ def approved_repayment(request):
         return Response(serializer.data)
 
 
+@csrf_exempt
 @api_view(['GET'])
 def pending_repayment(request):
     if request.method == "GET":
@@ -306,6 +301,7 @@ def pending_repayment(request):
         return Response(serializer.data)
 
 
+@csrf_exempt
 @api_view(['POST'])
 def Approve_one(request):
     if request.method == "POST":
@@ -342,7 +338,7 @@ def Approve_one(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def Approve_all(request):
     if request.method == "POST":
