@@ -18,112 +18,117 @@ from rest_framework.decorators import api_view
 from .authentication import Authentication
 
 
-
 @staticmethod
 def check_repayment(request):
     if request.method == "POST":
-        serializer = RepaymentSerializer(data = request.data)
+        serializer = RepaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         payment_date = serializer.validated_data["payment_date"]
         amount = serializer.validated_data["amount"]
         remita_manadate = serializer.validated_data["remita_manadate"]
-        print(f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
+        print(
+            f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
         # is_flagged = (serializer.validated_data["is_flagged"])
-        response = LoanRepayment.flag_repayment(payment_date, amount, remita_manadate)
+        response = LoanRepayment.flag_repayment(
+            payment_date, amount, remita_manadate)
         return response
 
 
 def get_random(lenght):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
 
+
 def get_access_token(payload):
     return jwt.encode(
-        {'exp': datetime.now() + timedelta(minutes=5), **payload},    #set expiry time for the access token 
-        settings.SECRET_KEY,        #a secret that is unique to your app
-        algorithm="HS256"      #lenght of jwt token 
+        # set expiry time for the access token
+        {'exp': datetime.now() + timedelta(minutes=5), **payload},
+        settings.SECRET_KEY,  # a secret that is unique to your app
+        algorithm="HS256"  # lenght of jwt token
     )
 
+
 def get_refresh_token():
-     return jwt.encode(
-        {'exp': datetime.now() + timedelta(days=365), 'data':get_random(10)},    #set expiry time for the access token 
-        settings.SECRET_KEY,        #a secret that is unique to your app
-        algorithm="HS256"      #lenght of jwt token 
-     )
+    return jwt.encode(
+        {'exp': datetime.now() + timedelta(days=365), 'data': get_random(10)
+         },  # set expiry time for the access token
+        settings.SECRET_KEY,  # a secret that is unique to your app
+        algorithm="HS256"  # lenght of jwt token
+    )
+
 
 class LoginView(APIView):
-    
+
     serializer_class = LoginSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data) #request the serialized data
-        serializer.is_valid(raise_exception=True)  #validate serializer
-        
+        serializer = self.serializer_class(
+            data=request.data)  # request the serialized data
+        serializer.is_valid(raise_exception=True)  # validate serializer
+
         user = authenticate(
-            email=serializer.validated_data["email"], 
-            password=serializer.validated_data['password']) #checking if user exist and log them in
-        
-       
+            email=serializer.validated_data["email"],
+            password=serializer.validated_data['password'])  # checking if user exist and log them in
+
         if not user:
-            
-            return Response({'error':'invalid email or password'}, status="400")
+
+            return Response({'error': 'invalid email or password'}, status="400")
 
         else:
             login(request, user)
 
-        Jwt.objects.filter(user_id=user.id).delete()    #validation and delete 
+        Jwt.objects.filter(user_id=user.id).delete()  # validation and delete
 
         access = get_access_token({'user_id': user.id})
         refresh = get_refresh_token()
 
         Jwt.objects.create(
-            user_id = user.id,access=access.decode(), refresh = refresh.decode())
-
+            user_id=user.id, access=access.decode(), refresh=refresh.decode())
 
         # return Response({'user_email':user.email})
-        return Response({'user_email':user.email,'access': access, 'refresh':refresh})
-
+        return Response({'user_email': user.email, 'access': access, 'refresh': refresh})
 
 
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data) #request the serialized data
-        serializer.is_valid(raise_exception=True)  #validate serializer
+        serializer = self.serializer_class(
+            data=request.data)  # request the serialized data
+        serializer.is_valid(raise_exception=True)  # validate serializer
 
         CustomUser.objects._create_user(**serializer.validated_data)
 
         return Response({'success': 'User created'})
 
 
-
 class RefreshView(APIView):
     serializer_class = ResfreshSerializer
 
-    def post (self, request):
-        serializer =self.serializer_class(data=request.data)
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:
             active_jwt = Jwt.objects.get(
-                refresh = serializer.validated_data['refresh'])
+                refresh=serializer.validated_data['refresh'])
         except Jwt.DoesNotExist:
-            return Response({'error':'refresh token not found'}, status='400')
+            return Response({'error': 'refresh token not found'}, status='400')
 
         if not Authentication.verify_token(serializer.validated_data['refresh']):
-            return Response ({'error': 'Token is invalid or has expired'})
+            return Response({'error': 'Token is invalid or has expired'})
 
-#update current loggedin user and  return a new access token and refresh token 
+# update current loggedin user and  return a new access token and refresh token
         access = get_access_token({'user_id': active_jwt.user.id})
         refresh = get_refresh_token()
 
-        active_jwt.access= access.decode()
-        active_jwt.refresh= refresh.decode()
+        active_jwt.access = access.decode()
+        active_jwt.refresh = refresh.decode()
         active_jwt.save()
-        return Response({'access': access, 'refresh':refresh})
+        return Response({'access': access, 'refresh': refresh})
 
-class Getsecuredinfo(APIView): 
+
+class Getsecuredinfo(APIView):
     authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
 
@@ -133,27 +138,109 @@ class Getsecuredinfo(APIView):
 
 
 class Repayment(generics.ListCreateAPIView):
-    
-    def get_queryset(self):
-        user = self.request.user
-        return user.accounts.all()
-    
-    # queryset = LoanRepayment.objects.all()
+    queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
 
-    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-# @api_view(['POST'])
-# def post_repayment(request):
-#     if request.method == "POST":
-#         serializer = RepaymentSerializer(data = request.data)
-#         serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data.get('user')
+        # user_id = serializer.validated_data.get('id')
+        phone = serializer.validated_data.get('phone')
+        amount = serializer.validated_data.get('amount')
+        remita_mandate_id = serializer.validated_data.get('remita_mandate_id')
+        payment_date = serializer.validated_data.get('payment_date')
+        payment_method = serializer.validated_data.get('payment_method')
 
-#         serializer.save()
-#         message = {
-#                 "status": "Created"
-#             }
-#         return Response(data=message, status='200')
+        check_repayment = LoanRepayment.objects.filter(
+            remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
+
+        if check_repayment:
+            LoanRepayment.objects.create(
+                user=user,
+                phone=phone,
+                amount=amount,
+                remita_mandate_id=remita_mandate_id,
+                payment_date=payment_date,
+                payment_method=payment_method,
+                is_duplicate=True,
+
+            )
+
+            data = {
+                "status": status.HTTP_302_FOUND,
+                "phone": phone,
+                "message": "This repayment transaction already exist do you want to proceed?"
+            }
+
+            request.session["phone"] = phone
+
+            return Response(data, status=status.HTTP_201_CREATED)
+        else:
+            LoanRepayment.objects.create(
+                user=user,
+                phone=phone,
+                amount=amount,
+                remita_mandate_id=remita_mandate_id,
+                payment_date=payment_date,
+                payment_method=payment_method
+            )
+
+            data = {
+                "status": status.HTTP_201_CREATED,
+                "message": "repayment created"
+            }
+
+            return Response(data, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        queryset = self.get_queryset()
+        serializer = RepaymentSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ConfirmDuplicateRepayment(APIView):
+    def post(self, request):
+        serializer = ConfirmRepaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data.get("phone")
+
+        get_repayment = LoanRepayment.objects.filter(
+            phone=phone, is_duplicate=True).last()
+
+        if get_repayment:
+            get_repayment.is_duplicate = False
+            get_repayment.is_flagged = True
+            get_repayment.save()
+
+            data = {
+                "status": status.HTTP_200_OK,
+                "message": "Repayment posted successfully"
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        else:
+            data = {
+                "status": status.HTTP_400_BAD_REQUEST,
+                "message": "Error finding and confirming duplicate repayment. contact the tech team"
+            }
+
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def post_repayment(request):
+    if request.method == "POST":
+        serializer = RepaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+        message = {
+            "status": "Created"
+        }
+        return Response(data=message, status='200')
 
 
 class Changepassword(generics.UpdateAPIView):
@@ -162,36 +249,36 @@ class Changepassword(generics.UpdateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_object(self, queryset=None):
-        obj =self.request.user
+        obj = self.request.user
         return obj
-    
+
     def update(self, request, *args, **kwargs):
-        
+
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            #check old password
+            # check old password
             if not self.object.check_password(serializer.data.get('old_password')):
                 response = {
-                    'status':'failed',
-                    'code':status.HTTP_400_BAD_REQUEST,
+                    'status': 'failed',
+                    'code': status.HTTP_400_BAD_REQUEST,
 
-                    'message':'password failed',
+                    'message': 'password failed',
 
-                    'data':[]
+                    'data': []
                 }
                 return Response(response)
-            #set password hashes the password that user will get
-            self.object.set_password(serializer.data.get('new_password'))  
+            # set password hashes the password that user will get
+            self.object.set_password(serializer.data.get('new_password'))
 
             self.object.save()
             response = {
-                'status':'success',
-                'code':status.HTTP_200_OK,
+                'status': 'success',
+                'code': status.HTTP_200_OK,
 
-                'message':'password updated successfully',
+                'message': 'password updated successfully',
 
-                'data':[]
+                'data': []
             }
             return Response(response)
 
@@ -201,9 +288,10 @@ class Changepassword(generics.UpdateAPIView):
 @api_view(['GET'])
 def approved_repayment(request):
     if request.method == "GET":
-        approved = LoanRepayment.objects.filter(is_approved = True, is_mandate_closed = False)
+        approved = LoanRepayment.objects.filter(
+            is_approved=True, is_mandate_closed=False)
         serializer = RepaymentSerializer(approved, many=True)
-        
+
         print(serializer.data)
         return Response(serializer.data)
 
@@ -211,80 +299,78 @@ def approved_repayment(request):
 @api_view(['GET'])
 def pending_repayment(request):
     if request.method == "GET":
-        pending = LoanRepayment.objects.filter(is_approved = False)
+        pending = LoanRepayment.objects.filter(is_approved=False)
         serializer = RepaymentSerializer(pending, many=True)
-        
+
         print(serializer.data)
         return Response(serializer.data)
 
-    
+
 @api_view(['POST'])
 def Approve_one(request):
     if request.method == "POST":
-        serializer = ApproveoneSerializer(data = request.data)
+        serializer = ApproveoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_designation = serializer.validated_data["is_staff"]
         payment_id = int(serializer.validated_data["payment_id"])
         is_approved = serializer.validated_data["is_approved"]
         email = serializer.validated_data["email"]
-        user = CustomUser.objects.filter(email=email, is_staff = user_designation)
+        user = CustomUser.objects.filter(
+            email=email, is_staff=user_designation)
         if user:
-            
+
             print(user.values())
-            loan = LoanRepayment.objects.filter(id=payment_id).update(is_approved=is_approved)
+            loan = LoanRepayment.objects.filter(
+                id=payment_id).update(is_approved=is_approved)
             print(loan)
             result = LoanRepayment.objects.filter(id=payment_id)
-            
+
             print(result.values())
             response = {
-                    'status':'success',
-                    
-                    'message':'payment approval updated'
-                }
+                'status': 'success',
+
+                'message': 'payment approval updated'
+            }
         else:
             response = {
-                    'status':'unsuccessful',
-                    
-                    'message':'payment approval not successful'
-                }
+                'status': 'unsuccessful',
+
+                'message': 'payment approval not successful'
+            }
         return Response(data=response, status=status.HTTP_201_CREATED)
-    
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 def Approve_all(request):
     if request.method == "POST":
-        serializer = ApproveallSerializer(data = request.data)
+        serializer = ApproveallSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user_designation = serializer.validated_data["is_staff"]
         approve_all = serializer.validated_data["is_approved_all"]
         email = serializer.validated_data["email"]
-        user = CustomUser.objects.filter(email=email, is_staff = user_designation)
+        user = CustomUser.objects.filter(
+            email=email, is_staff=user_designation)
         if user and approve_all:
-            
+
             print(user.values())
-            loan = LoanRepayment.objects.filter(is_approved=False).update(is_approved=True)
+            loan = LoanRepayment.objects.filter(
+                is_approved=False).update(is_approved=True)
             print(loan)
             response = {
-                    'status':'success',
-                    
-                    'message':'all payment approved successfully'
-                }
+                'status': 'success',
+
+                'message': 'all payment approved successfully'
+            }
         else:
             response = {
-                    'status':'unsuccessful',
-                    
-                    'message':'you do not have permission to carry out this action'
-                }
+                'status': 'unsuccessful',
+
+                'message': 'you do not have permission to carry out this action'
+            }
         return Response(data=response, status=status.HTTP_201_CREATED)
-    
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
