@@ -8,7 +8,7 @@ from repayment.models import CustomUser
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
-    designation = serializers.CharField()
+    # designation = serializers.CharField()
 
 
 class RegisterSerializer(serializers.Serializer):
