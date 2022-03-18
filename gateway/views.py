@@ -166,9 +166,18 @@ class Repayment(generics.ListCreateAPIView):
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
 
+        try:
+            user = CustomUser.objects.get(email=request.user.email)
+        except:
+            data = {
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "message": "please login before you can post repayment"
+            }
+            return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         if check_repayment:
             LoanRepayment.objects.create(
-                user=request.user,
+                user=user,
                 phone=phone,
                 amount=amount,
                 remita_mandate_id=remita_mandate_id,
