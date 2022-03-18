@@ -157,7 +157,7 @@ class Repayment(generics.ListCreateAPIView):
         phone = serializer.validated_data.get('phone')
         amount = serializer.validated_data.get('amount')
         remita_mandate_id = serializer.validated_data.get('remita_mandate_id')
-        payment_date = serializer.validated_data.get('payment_date')
+        payment_date = serializer.validated_data.get('pay_date')
         payment_method = serializer.validated_data.get('payment_method')
 
         print(f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")

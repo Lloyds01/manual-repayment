@@ -42,6 +42,7 @@ class LoanRepayment(models.Model):
     is_duplicate = models.BooleanField(default=False)
     internal =  models.BooleanField(default=False)
     external = models.BooleanField(default=False)
+    branch_name= models.CharField(max_length=25)
 
     def __str__(self):
         return self.phone
