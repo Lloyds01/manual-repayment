@@ -40,6 +40,7 @@ from django.views.decorators.csrf import csrf_exempt
 def get_random(lenght):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
 
+
 @csrf_exempt
 def get_access_token(payload):
     return jwt.encode(
@@ -48,6 +49,7 @@ def get_access_token(payload):
         settings.SECRET_KEY,  # a secret that is unique to your app
         algorithm="HS256"  # lenght of jwt token
     )
+
 
 @csrf_exempt
 def get_refresh_token():
@@ -58,9 +60,10 @@ def get_refresh_token():
         algorithm="HS256"  # lenght of jwt token
     )
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
-    
+
     serializer_class = LoginSerializer
 
     def post(self, request):
@@ -104,7 +107,6 @@ class RegisterView(APIView):
         return Response({'success': 'User created'})
 
 
-
 @method_decorator(csrf_exempt, name="dispatch")
 class RefreshView(APIView):
     serializer_class = ResfreshSerializer
@@ -145,8 +147,7 @@ class Getsecuredinfo(APIView):
 @method_decorator(csrf_exempt, name="dispatch")
 class Repayment(generics.ListCreateAPIView):
     queryset = LoanRepayment.objects.all()
-    serializer_class = RepaymentSerializer
-    
+    serializer_class = PostRepaymentSerializer
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -160,7 +161,8 @@ class Repayment(generics.ListCreateAPIView):
         payment_date = serializer.validated_data.get('pay_date')
         payment_method = serializer.validated_data.get('payment_method')
 
-        print(f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
+        print(
+            f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
 
@@ -207,6 +209,7 @@ class Repayment(generics.ListCreateAPIView):
         serializer = RepaymentSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class ConfirmDuplicateRepayment(APIView):
     def post(self, request):
@@ -236,6 +239,7 @@ class ConfirmDuplicateRepayment(APIView):
             }
 
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class Changepassword(generics.UpdateAPIView):
@@ -339,6 +343,7 @@ def Approve_one(request):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @csrf_exempt
 @api_view(['POST'])
