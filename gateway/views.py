@@ -20,21 +20,21 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 
-@staticmethod
-def check_repayment(request):
-    if request.method == "POST":
-        serializer = RepaymentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+# @staticmethod
+# def check_repayment(request):
+#     if request.method == "POST":
+#         serializer = RepaymentSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
 
-        payment_date = serializer.validated_data["payment_date"]
-        amount = serializer.validated_data["amount"]
-        remita_manadate = serializer.validated_data["remita_manadate"]
-        print(
-            f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
-        # is_flagged = (serializer.validated_data["is_flagged"])
-        response = LoanRepayment.flag_repayment(
-            payment_date, amount, remita_manadate)
-        return response
+#         payment_date = serializer.validated_data["payment_date"]
+#         amount = serializer.validated_data["amount"]
+#         remita_manadate = serializer.validated_data["remita_manadate"]
+#         print(
+#             f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
+#         # is_flagged = (serializer.validated_data["is_flagged"])
+#         response = LoanRepayment.flag_repayment(
+#             payment_date, amount, remita_manadate)
+#         return response
 
 @csrf_exempt
 def get_random(lenght):
@@ -146,6 +146,7 @@ class Getsecuredinfo(APIView):
 class Repayment(generics.ListCreateAPIView):
     queryset = LoanRepayment.objects.all()
     serializer_class = RepaymentSerializer
+    
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -159,6 +160,7 @@ class Repayment(generics.ListCreateAPIView):
         payment_date = serializer.validated_data.get('payment_date')
         payment_method = serializer.validated_data.get('payment_method')
 
+        print(f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
 
