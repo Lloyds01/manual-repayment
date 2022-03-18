@@ -168,7 +168,7 @@ class Repayment(generics.ListCreateAPIView):
 
         if check_repayment:
             LoanRepayment.objects.create(
-                user=user,
+                user=request.user,
                 phone=phone,
                 amount=amount,
                 remita_mandate_id=remita_mandate_id,
@@ -207,6 +207,7 @@ class Repayment(generics.ListCreateAPIView):
     def get(self, request):
         queryset = self.get_queryset()
         serializer = RepaymentSerializer(queryset, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
