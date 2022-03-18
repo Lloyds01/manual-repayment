@@ -21,6 +21,15 @@ class ResfreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
 
+class PostRepaymentSerializer(serializers.Serializer):
+    user = serializers.CharField()
+    phone = serializers.CharField()
+    amount = serializers.FloatField()
+    remita_mandate_id = serializers.CharField()
+    payment_method = serializers.CharField()
+    payment_date = serializers.CharField()
+
+
 class RepaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanRepayment
