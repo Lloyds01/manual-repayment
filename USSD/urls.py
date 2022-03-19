@@ -4,6 +4,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('gateway.urls'))
+    path('user/', include('gateway.urls')),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
     # path('repayment/',include('repayment.urls')),
 ]

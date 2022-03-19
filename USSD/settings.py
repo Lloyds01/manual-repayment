@@ -15,7 +15,6 @@ from pathlib import Path
 from decouple import config
 import django_heroku
 import environ
-import os
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -49,11 +48,22 @@ INSTALLED_APPS = [
     'import_export',
     'gateway',
     'corsheaders',
+    'rest_framework.authtoken',
+    'djoser',
 ]
 
-# REST_FRAMEWORK = (
-#     "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.athentication.Authentication")
-# )
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        
+    ),
+
+    "DEFAULT_PERMISSIONS_CLASSES":(
+        'rest_framework.permissions.IsAuthenticated '
+    ),
+
+    "AUTH_USER_MODEL" : 'repayment.CustomUser'
+}
 
 AUTH_USER_MODEL = 'repayment.CustomUser'
 
@@ -71,9 +81,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-# REST_FRAMEWORK ={
-# "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.authentication.Authentication")
-# }
+
 
 ROOT_URLCONF = 'USSD.urls'
 

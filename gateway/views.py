@@ -89,9 +89,12 @@ class LoginView(APIView):
 
         Jwt.objects.create(
             user_id=user.id, access=access.decode(), refresh=refresh.decode())
-
+        
         # return Response({'user_email':user.email})
+        print(user)
         return Response({'user_email': user.email, 'access': access, 'refresh': refresh})
+
+
 
 
 class RegisterView(APIView):
