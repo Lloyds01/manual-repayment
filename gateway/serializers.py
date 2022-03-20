@@ -11,7 +11,6 @@ class LoginSerializer(serializers.Serializer):
 
 
 class PostRepaymentSerializer(serializers.Serializer):
-    user = serializers.CharField()
     phone = serializers.CharField()
     amount = serializers.FloatField()
     remita_mandate_id = serializers.CharField()
