@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from gateway.models import LoanRepayment, Merge
 from rest_framework import serializers
 from repayment.models import CustomUser
+from django.contrib.auth.models import User
 
 
 class LoginSerializer(serializers.Serializer):
@@ -56,3 +57,9 @@ class ApproveallSerializer(serializers.ModelSerializer):
 
 class ConfirmRepaymentSerializer(serializers.Serializer):
     phone = serializers.CharField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email']

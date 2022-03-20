@@ -15,6 +15,7 @@ urlpatterns = [
     path('pending/', pending_repayment),
     path('approve_one/', Approve_one),
     path('approve_all/', Approve_all),
-    path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view())
+    path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view()),
+    path('api/users/', ListUsers.as_view()),
 
 ]

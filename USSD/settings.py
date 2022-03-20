@@ -49,11 +49,9 @@ INSTALLED_APPS = [
     'import_export',
     'gateway',
     'corsheaders',
+    'rest_framework.authtoken',
 ]
 
-# REST_FRAMEWORK = (
-#     "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.athentication.Authentication")
-# )
 
 AUTH_USER_MODEL = 'repayment.CustomUser'
 
@@ -71,9 +69,18 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-# REST_FRAMEWORK ={
-# "DEFAULT_AUTHENTICATION_CLASSES": ("gateway.authentication.Authentication")
-# }
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 ROOT_URLCONF = 'USSD.urls'
 

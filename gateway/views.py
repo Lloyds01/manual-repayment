@@ -14,10 +14,16 @@ from django.contrib.auth import authenticate, login
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from .authentication import Authentication
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import authentication, permissions
+from django.contrib.auth.models import User
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
 
 
 # @staticmethod
@@ -81,17 +87,8 @@ class LoginView(APIView):
 
         else:
             login(request, user)
-
-        Jwt.objects.filter(user_id=user.id).delete()  # validation and delete
-
-        access = get_access_token({'user_id': user.id})
-        refresh = get_refresh_token()
-
-        Jwt.objects.create(
-            user_id=user.id, access=access.decode(), refresh=refresh.decode())
-
-        # return Response({'user_email':user.email})
-        return Response({'user_email': user.email, 'access': access, 'refresh': refresh})
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'user_email': user.email, 'token': token.key})
 
 
 class RegisterView(APIView):
@@ -146,6 +143,9 @@ class Getsecuredinfo(APIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class Repayment(generics.ListCreateAPIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
     queryset = LoanRepayment.objects.all()
     serializer_class = PostRepaymentSerializer
 
@@ -222,6 +222,9 @@ class Repayment(generics.ListCreateAPIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ConfirmDuplicateRepayment(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         serializer = ConfirmRepaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -296,6 +299,8 @@ class Changepassword(generics.UpdateAPIView):
 
 @csrf_exempt
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def approved_repayment(request):
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(
@@ -308,6 +313,8 @@ def approved_repayment(request):
 
 @csrf_exempt
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
@@ -319,6 +326,8 @@ def pending_repayment(request):
 
 @csrf_exempt
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def Approve_one(request):
     if request.method == "POST":
         serializer = ApproveoneSerializer(data=request.data)
@@ -357,6 +366,8 @@ def Approve_one(request):
 
 @csrf_exempt
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def Approve_all(request):
     if request.method == "POST":
         serializer = ApproveallSerializer(data=request.data)
@@ -387,3 +398,21 @@ def Approve_all(request):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListUsers(APIView):
+    """
+    View to list all users in the system.
+
+    * Requires token authentication.
+    * Only admin users are able to access this view.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        """
+        Return a list of all users.
+        """
+        usernames = [user.email for user in CustomUser.objects.all()]
+        return Response(usernames)
