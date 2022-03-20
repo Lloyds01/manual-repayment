@@ -54,15 +54,13 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    
     ),
+}
 
-    "DEFAULT_PERMISSIONS_CLASSES":(
-        'rest_framework.permissions.IsAuthenticated '
-    ),
-
-    "AUTH_USER_MODEL" : 'repayment.CustomUser'
+SIMPLE_JWT = {
+   'AUTH_HEADER_TYPES': ('JWT',),
 }
 
 AUTH_USER_MODEL = 'repayment.CustomUser'
