@@ -96,12 +96,13 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
+            pay_date = datetime.strptime(payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
                 amount=amount,
                 remita_mandate_id=remita_mandate_id,
-                payment_date=payment_date,
+                payment_date=pay_date,
                 payment_method=payment_method,
                 is_duplicate=True,
 
