@@ -9,17 +9,6 @@ from django.contrib.auth.models import User
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
-    # designation = serializers.CharField()
-
-
-class RegisterSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
-    name = serializers.CharField()
-
-
-class ResfreshSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
 
 
 class PostRepaymentSerializer(serializers.Serializer):

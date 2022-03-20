@@ -15,7 +15,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from .authentication import Authentication
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import authentication, permissions
@@ -25,46 +24,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 
-
-# @staticmethod
-# def check_repayment(request):
-#     if request.method == "POST":
-#         serializer = RepaymentSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-
-#         payment_date = serializer.validated_data["payment_date"]
-#         amount = serializer.validated_data["amount"]
-#         remita_manadate = serializer.validated_data["remita_manadate"]
-#         print(
-#             f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
-#         # is_flagged = (serializer.validated_data["is_flagged"])
-#         response = LoanRepayment.flag_repayment(
-#             payment_date, amount, remita_manadate)
-#         return response
-
-@csrf_exempt
-def get_random(lenght):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
-
-
-@csrf_exempt
-def get_access_token(payload):
-    return jwt.encode(
-        # set expiry time for the access token
-        {'exp': datetime.now() + timedelta(minutes=5), **payload},
-        settings.SECRET_KEY,  # a secret that is unique to your app
-        algorithm="HS256"  # lenght of jwt token
-    )
-
-
-@csrf_exempt
-def get_refresh_token():
-    return jwt.encode(
-        {'exp': datetime.now() + timedelta(days=365), 'data': get_random(10)
-         },  # set expiry time for the access token
-        settings.SECRET_KEY,  # a secret that is unique to your app
-        algorithm="HS256"  # lenght of jwt token
-    )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -92,49 +51,9 @@ class LoginView(APIView):
             return Response({'user_email': user.email, 'token': token.key})
 
 
-class RegisterView(APIView):
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data)  # request the serialized data
-        serializer.is_valid(raise_exception=True)  # validate serializer
-
-        CustomUser.objects._create_user(**serializer.validated_data)
-
-        return Response({'success': 'User created'})
-
-
-@method_decorator(csrf_exempt, name="dispatch")
-class RefreshView(APIView):
-    serializer_class = ResfreshSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            active_jwt = Jwt.objects.get(
-                refresh=serializer.validated_data['refresh'])
-        except Jwt.DoesNotExist:
-            return Response({'error': 'refresh token not found'}, status='400')
-
-        if not Authentication.verify_token(serializer.validated_data['refresh']):
-            return Response({'error': 'Token is invalid or has expired'})
-
-# update current loggedin user and  return a new access token and refresh token
-        access = get_access_token({'user_id': active_jwt.user.id})
-        refresh = get_refresh_token()
-
-        active_jwt.access = access.decode()
-        active_jwt.refresh = refresh.decode()
-        active_jwt.save()
-        return Response({'access': access, 'refresh': refresh})
-
-
 @method_decorator(csrf_exempt, name="dispatch")
 class Getsecuredinfo(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -159,7 +78,7 @@ class Repayment(generics.ListCreateAPIView):
         phone = serializer.validated_data.get('phone')
         amount = serializer.validated_data.get('amount')
         remita_mandate_id = serializer.validated_data.get('remita_mandate_id')
-        payment_date = serializer.validated_data.get('payment_date')
+        payment_date = serializer.validated_data.get('pay_date')
         payment_method = serializer.validated_data.get('payment_method')
 
         print(
@@ -177,12 +96,13 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
+            pay_date = datetime.strptime(payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
                 amount=amount,
                 remita_mandate_id=remita_mandate_id,
-                payment_date=payment_date,
+                payment_date=pay_date,
                 payment_method=payment_method,
                 is_duplicate=True,
 
@@ -303,6 +223,7 @@ class Changepassword(generics.UpdateAPIView):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def approved_repayment(request):
+    
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(
             is_approved=True, is_mandate_closed=False)
