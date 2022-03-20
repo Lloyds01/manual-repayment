@@ -69,7 +69,8 @@ def get_refresh_token():
 
 @method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
-
+    authentication_classes = []
+    permission_classes = []
     serializer_class = LoginSerializer
 
     def post(self, request):
@@ -145,7 +146,7 @@ class Getsecuredinfo(APIView):
 class Repayment(generics.ListCreateAPIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    
+
     queryset = LoanRepayment.objects.all()
     serializer_class = PostRepaymentSerializer
 
