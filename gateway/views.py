@@ -14,53 +14,22 @@ from django.contrib.auth import authenticate, login
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from rest_framework.decorators import api_view
-from .authentication import Authentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import authentication, permissions
+from django.contrib.auth.models import User
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
 
 
-# @staticmethod
-# def check_repayment(request):
-#     if request.method == "POST":
-#         serializer = RepaymentSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-
-#         payment_date = serializer.validated_data["payment_date"]
-#         amount = serializer.validated_data["amount"]
-#         remita_manadate = serializer.validated_data["remita_manadate"]
-#         print(
-#             f'user input: payment data{payment_date}, amount: {amount}, remita_mandate{remita_manadate}')
-#         # is_flagged = (serializer.validated_data["is_flagged"])
-#         response = LoanRepayment.flag_repayment(
-#             payment_date, amount, remita_manadate)
-#         return response
-
-@csrf_exempt
-def get_random(lenght):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=lenght))
-
-@csrf_exempt
-def get_access_token(payload):
-    return jwt.encode(
-        # set expiry time for the access token
-        {'exp': datetime.now() + timedelta(minutes=5), **payload},
-        settings.SECRET_KEY,  # a secret that is unique to your app
-        algorithm="HS256"  # lenght of jwt token
-    )
-
-@csrf_exempt
-def get_refresh_token():
-    return jwt.encode(
-        {'exp': datetime.now() + timedelta(days=365), 'data': get_random(10)
-         },  # set expiry time for the access token
-        settings.SECRET_KEY,  # a secret that is unique to your app
-        algorithm="HS256"  # lenght of jwt token
-    )
 
 @method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
-    
+    authentication_classes = []
+    permission_classes = []
     serializer_class = LoginSerializer
 
     def post(self, request):
@@ -78,63 +47,13 @@ class LoginView(APIView):
 
         else:
             login(request, user)
-
-        Jwt.objects.filter(user_id=user.id).delete()  # validation and delete
-
-        access = get_access_token({'user_id': user.id})
-        refresh = get_refresh_token()
-
-        Jwt.objects.create(
-            user_id=user.id, access=access.decode(), refresh=refresh.decode())
-
-        # return Response({'user_email':user.email})
-        return Response({'user_email': user.email, 'access': access, 'refresh': refresh})
-
-
-class RegisterView(APIView):
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data)  # request the serialized data
-        serializer.is_valid(raise_exception=True)  # validate serializer
-
-        CustomUser.objects._create_user(**serializer.validated_data)
-
-        return Response({'success': 'User created'})
-
-
-
-@method_decorator(csrf_exempt, name="dispatch")
-class RefreshView(APIView):
-    serializer_class = ResfreshSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        try:
-            active_jwt = Jwt.objects.get(
-                refresh=serializer.validated_data['refresh'])
-        except Jwt.DoesNotExist:
-            return Response({'error': 'refresh token not found'}, status='400')
-
-        if not Authentication.verify_token(serializer.validated_data['refresh']):
-            return Response({'error': 'Token is invalid or has expired'})
-
-# update current loggedin user and  return a new access token and refresh token
-        access = get_access_token({'user_id': active_jwt.user.id})
-        refresh = get_refresh_token()
-
-        active_jwt.access = access.decode()
-        active_jwt.refresh = refresh.decode()
-        active_jwt.save()
-        return Response({'access': access, 'refresh': refresh})
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'user_email': user.email, 'token': token.key})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 class Getsecuredinfo(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -144,9 +63,11 @@ class Getsecuredinfo(APIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class Repayment(generics.ListCreateAPIView):
-    queryset = LoanRepayment.objects.all()
-    serializer_class = RepaymentSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     
+    queryset = LoanRepayment.objects.all()
+    serializer_class = PostRepaymentSerializer
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -157,12 +78,22 @@ class Repayment(generics.ListCreateAPIView):
         phone = serializer.validated_data.get('phone')
         amount = serializer.validated_data.get('amount')
         remita_mandate_id = serializer.validated_data.get('remita_mandate_id')
-        payment_date = serializer.validated_data.get('payment_date')
+        payment_date = serializer.validated_data.get('pay_date')
         payment_method = serializer.validated_data.get('payment_method')
 
-        print(f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
+        print(
+            f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
+
+        try:
+            user = CustomUser.objects.get(email=request.user.email)
+        except:
+            data = {
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "message": "please login before you can post repayment"
+            }
+            return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
             LoanRepayment.objects.create(
@@ -205,10 +136,15 @@ class Repayment(generics.ListCreateAPIView):
     def get(self, request):
         queryset = self.get_queryset()
         serializer = RepaymentSerializer(queryset, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ConfirmDuplicateRepayment(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         serializer = ConfirmRepaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -236,6 +172,7 @@ class ConfirmDuplicateRepayment(APIView):
             }
 
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class Changepassword(generics.UpdateAPIView):
@@ -282,7 +219,10 @@ class Changepassword(generics.UpdateAPIView):
 
 @csrf_exempt
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def approved_repayment(request):
+    
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(
             is_approved=True, is_mandate_closed=False)
@@ -294,6 +234,8 @@ def approved_repayment(request):
 
 @csrf_exempt
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
@@ -305,6 +247,8 @@ def pending_repayment(request):
 
 @csrf_exempt
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def Approve_one(request):
     if request.method == "POST":
         serializer = ApproveoneSerializer(data=request.data)
@@ -340,8 +284,11 @@ def Approve_one(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @csrf_exempt
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def Approve_all(request):
     if request.method == "POST":
         serializer = ApproveallSerializer(data=request.data)
@@ -372,3 +319,21 @@ def Approve_all(request):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListUsers(APIView):
+    """
+    View to list all users in the system.
+
+    * Requires token authentication.
+    * Only admin users are able to access this view.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        """
+        Return a list of all users.
+        """
+        usernames = [user.email for user in CustomUser.objects.all()]
+        return Response(usernames)
