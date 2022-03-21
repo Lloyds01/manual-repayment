@@ -25,15 +25,14 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch") #for corsheaders issue on the frontend
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = []
     serializer_class = LoginSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data)  # request the serialized data
+        serializer = self.serializer_class(data=request.data)  # request the serialized data
         serializer.is_valid(raise_exception=True)  # validate serializer
 
         user = authenticate(
@@ -46,18 +45,18 @@ class LoginView(APIView):
 
         else:
             login(request, user)
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'user_email': user.email, 'token': token.key})
+            token, created = Token.objects.get_or_create(user=user)  #create a token for user for identification
+            return Response({'user_email': user.email, 'token': token.key}) # return the email and token
 
 
-@method_decorator(csrf_exempt, name="dispatch")
-class Getsecuredinfo(APIView):
-    # authentication_classes = [Authentication]
-    permission_classes = [IsAuthenticated]
+# @method_decorator(csrf_exempt, name="dispatch")
+# class Getsecuredinfo(APIView):
+#     # authentication_classes = [Authentication]
+#     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        print(request.user)
-        return Response({'data': 'this is a secured info'})
+#     def get(self, request):
+#         print(request.user)
+#         return Response({'data': 'this is a secured info'})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -84,6 +83,7 @@ class Repayment(generics.ListCreateAPIView):
 
         print(
             f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
+
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
 
@@ -111,7 +111,7 @@ class Repayment(generics.ListCreateAPIView):
             )
 
             data = {
-                "status": status.HTTP_302_FOUND,
+                "status": status.HTTP_302_FOUND, #gives an error code stating the user phone number
                 "phone": phone,
                 "message": "This repayment transaction already exist do you want to proceed?"
             }
@@ -135,6 +135,8 @@ class Repayment(generics.ListCreateAPIView):
             }
 
             return Response(data, status=status.HTTP_201_CREATED)
+
+            # This is passed into session and will be decided by the user to proceed of not 
 
     def get(self, request):
         queryset = self.get_queryset()
