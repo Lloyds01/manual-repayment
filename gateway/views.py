@@ -1,6 +1,7 @@
 import email
 from logging import raiseExceptions
 import random
+import stat
 import string
 import jwt
 from rest_framework import generics
@@ -25,6 +26,7 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 
 
+
 @method_decorator(csrf_exempt, name="dispatch") #for corsheaders issue on the frontend
 class LoginView(APIView):
     authentication_classes = []
@@ -40,13 +42,21 @@ class LoginView(APIView):
             password=serializer.validated_data['password'])  # checking if user exist and log them in
 
         if not user:
-
-            return Response({'error': 'invalid email or password'}, status="400")
+            data = {
+                "status": status.HTTP_400_BAD_REQUEST,
+                "message": "invalid email or password. please try again!!"
+            }
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)  
 
         else:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)  #create a token for user for identification
-            return Response({'user_email': user.email, 'token': token.key}) # return the email and token
+            data = {
+                "status": status.HTTP_200_OK,
+                "user_email": user.email,
+                "token": token.key
+            }
+            return Response(data, status=status.HTTP_200_OK) # return the email and token
 
 
 # @method_decorator(csrf_exempt, name="dispatch")
