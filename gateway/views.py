@@ -1,6 +1,7 @@
 import email
 from logging import raiseExceptions
 import random
+import stat
 import string
 import jwt
 from rest_framework import generics
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework.views import APIView
 from .serializers import *
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -23,6 +24,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
+
 
 
 @method_decorator(csrf_exempt, name="dispatch") #for corsheaders issue on the frontend
@@ -40,23 +42,36 @@ class LoginView(APIView):
             password=serializer.validated_data['password'])  # checking if user exist and log them in
 
         if not user:
-
-            return Response({'error': 'invalid email or password'}, status="400")
+            data = {
+                "status": status.HTTP_400_BAD_REQUEST,
+                "message": "invalid email or password. Please try again!!"
+            }
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)  
 
         else:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)  #create a token for user for identification
-            return Response({'user_email': user.email, 'token': token.key}) # return the email and token
+            data = {
+                "status": status.HTTP_200_OK,
+                "user_email": user.email,
+                "token": token.key
+            }
+            return Response(data, status=status.HTTP_200_OK) # return the email and token
 
 
-# @method_decorator(csrf_exempt, name="dispatch")
-# class Getsecuredinfo(APIView):
-#     # authentication_classes = [Authentication]
-#     permission_classes = [IsAuthenticated]
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_logout(request):
+    
+    Token.objects.get(user = request.user).delete()
 
-#     def get(self, request):
-#         print(request.user)
-#         return Response({'data': 'this is a secured info'})
+    logout(request)
+    data = {
+        "status": status.HTTP_200_OK,
+        "message": "logout successful"
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -79,8 +94,7 @@ class Repayment(generics.ListCreateAPIView):
         payment_date = serializer.validated_data.get('payment_date')
         payment_method = serializer.validated_data.get('payment_method')
 
-        pay_date = datetime.strptime(
-                payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+        pay_date = payment_date
 
         print(f"payment date :::::::::::::::: {payment_date}")
 
@@ -100,7 +114,7 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
-            
+
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
