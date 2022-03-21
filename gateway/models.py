@@ -1,6 +1,5 @@
 from os import stat
 from django.db import models
-# from gateway.serializers import RepaymentSerializer
 from repayment.models import CustomUser
 from rest_framework.response import Response
 
