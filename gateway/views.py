@@ -25,7 +25,6 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 
 
-
 @method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
     authentication_classes = []
@@ -78,8 +77,10 @@ class Repayment(generics.ListCreateAPIView):
         phone = serializer.validated_data.get('phone')
         amount = serializer.validated_data.get('amount')
         remita_mandate_id = serializer.validated_data.get('remita_mandate_id')
-        payment_date = serializer.validated_data.get('pay_date')
+        payment_date = serializer.validated_data.get('payment_date')
         payment_method = serializer.validated_data.get('payment_method')
+
+        print(f"payment date :::::::::::::::: {payment_date}")
 
         print(
             f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
@@ -96,7 +97,8 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
-            pay_date = datetime.strptime(payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+            pay_date = datetime.strptime(
+                payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
@@ -223,7 +225,7 @@ class Changepassword(generics.UpdateAPIView):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def approved_repayment(request):
-    
+
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(
             is_approved=True, is_mandate_closed=False)
