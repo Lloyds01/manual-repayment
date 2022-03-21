@@ -80,12 +80,15 @@ class Repayment(generics.ListCreateAPIView):
         payment_date = serializer.validated_data.get('payment_date')
         payment_method = serializer.validated_data.get('payment_method')
 
+        pay_date = datetime.strptime(
+                payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+
         print(f"payment date :::::::::::::::: {payment_date}")
 
         print(
             f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
         check_repayment = LoanRepayment.objects.filter(
-            remita_mandate_id=remita_mandate_id, amount=amount, payment_date=payment_date)
+            remita_mandate_id=remita_mandate_id, amount=amount, payment_date=pay_date)
 
         try:
             user = CustomUser.objects.get(email=request.user.email)
@@ -97,8 +100,7 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
-            pay_date = datetime.strptime(
-                payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+            
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
