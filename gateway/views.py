@@ -89,8 +89,7 @@ class Repayment(generics.ListCreateAPIView):
         payment_date = serializer.validated_data.get('payment_date')
         payment_method = serializer.validated_data.get('payment_method')
 
-        pay_date = datetime.strptime(
-                payment_date, "%Y-%m-%dT%H:%M:%S.%f%z")
+        pay_date = payment_date
 
         print(f"payment date :::::::::::::::: {payment_date}")
 
@@ -110,7 +109,7 @@ class Repayment(generics.ListCreateAPIView):
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if check_repayment:
-            
+
             LoanRepayment.objects.create(
                 user=user,
                 phone=phone,
