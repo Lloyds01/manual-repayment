@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework.views import APIView
 from .serializers import *
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -44,7 +44,7 @@ class LoginView(APIView):
         if not user:
             data = {
                 "status": status.HTTP_400_BAD_REQUEST,
-                "message": "invalid email or password. please try again!!"
+                "message": "invalid email or password. Please try again!!"
             }
             return Response(data, status=status.HTTP_400_BAD_REQUEST)  
 
@@ -59,14 +59,19 @@ class LoginView(APIView):
             return Response(data, status=status.HTTP_200_OK) # return the email and token
 
 
-# @method_decorator(csrf_exempt, name="dispatch")
-# class Getsecuredinfo(APIView):
-#     # authentication_classes = [Authentication]
-#     permission_classes = [IsAuthenticated]
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_logout(request):
+    
+    Token.objects.get(user = request.user).delete()
 
-#     def get(self, request):
-#         print(request.user)
-#         return Response({'data': 'this is a secured info'})
+    logout(request)
+    data = {
+        "status": status.HTTP_200_OK,
+        "message": "logout successful"
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
