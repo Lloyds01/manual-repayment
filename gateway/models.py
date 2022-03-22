@@ -41,10 +41,15 @@ class LoanRepayment(models.Model):
     is_duplicate = models.BooleanField(default=False)
     internal = models.BooleanField(default=False)
     external = models.BooleanField(default=False)
-    # branch_name= models.CharField(max_length=25)
+    branch_name = models.CharField(max_length=100, blank=True, null=True)
+    repayment_posted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.phone
+
+    @property
+    def username(self):
+        return self.user.name
 
 
 class Merge(models.Model):

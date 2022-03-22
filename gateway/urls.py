@@ -9,7 +9,7 @@ urlpatterns = [
 
     path('login/', LoginView.as_view()),
     # path('logout/',Logout.as_view()),
-    path('logout/',user_logout),
+    path('logout/', user_logout),
     path("repayment/", Repayment.as_view()),
     path('password/', Changepassword.as_view()),
     path("approved/", approved_repayment),
@@ -18,5 +18,6 @@ urlpatterns = [
     path('approve_all/', Approve_all),
     path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view()),
     path('api/users/', ListUsers.as_view()),
+    path('update_approved_payment/', UpdateApprovedPayment.as_view()),
 
 ]

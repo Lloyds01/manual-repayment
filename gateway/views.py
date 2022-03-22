@@ -24,17 +24,19 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
+from gateway.helpers.loandisk_helpers import check_mandate_branch
 
 
-
-@method_decorator(csrf_exempt, name="dispatch") #for corsheaders issue on the frontend
+# for corsheaders issue on the frontend
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = []
     serializer_class = LoginSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)  # request the serialized data
+        serializer = self.serializer_class(
+            data=request.data)  # request the serialized data
         serializer.is_valid(raise_exception=True)  # validate serializer
 
         user = authenticate(
@@ -46,24 +48,26 @@ class LoginView(APIView):
                 "status": status.HTTP_400_BAD_REQUEST,
                 "message": "invalid email or password. Please try again!!"
             }
-            return Response(data, status=status.HTTP_400_BAD_REQUEST)  
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             login(request, user)
-            token, created = Token.objects.get_or_create(user=user)  #create a token for user for identification
+            # create a token for user for identification
+            token, created = Token.objects.get_or_create(user=user)
             data = {
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
                 "token": token.key
             }
-            return Response(data, status=status.HTTP_200_OK) # return the email and token
+            # return the email and token
+            return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_logout(request):
-    
-    Token.objects.get(user = request.user).delete()
+
+    Token.objects.get(user=request.user).delete()
 
     logout(request)
     data = {
@@ -113,46 +117,69 @@ class Repayment(generics.ListCreateAPIView):
             }
             return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if check_repayment:
+        # check if mandate is_valid
+        get_manadate_date = check_mandate_branch(remita_mandate_id, phone)
 
-            LoanRepayment.objects.create(
-                user=user,
-                phone=phone,
-                amount=amount,
-                remita_mandate_id=remita_mandate_id,
-                payment_date=pay_date,
-                payment_method=payment_method,
-                is_duplicate=True,
+        if type(get_manadate_date) == dict:
+            if get_manadate_date["status"] == 400:
+                data = {
+                    "status": status.HTTP_400_BAD_REQUEST,
+                    "message": "Invalid mandate. please reverify this mandate and post again"
+                }
+                return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-            )
+            elif get_manadate_date["status"] == 200:
+                if check_repayment:
+                    LoanRepayment.objects.create(
+                        user=user,
+                        phone=phone,
+                        amount=amount,
+                        remita_mandate_id=remita_mandate_id,
+                        payment_date=pay_date,
+                        payment_method=payment_method,
+                        internal=get_manadate_date["data"]["internal_branch"],
+                        external=get_manadate_date["data"]["external_branch"],
+                        branch_name=get_manadate_date["data"]["branch_name"],
+                        is_duplicate=True,
 
-            data = {
-                "status": status.HTTP_302_FOUND, #gives an error code stating the user phone number
-                "phone": phone,
-                "message": "This repayment transaction already exist do you want to proceed?"
-            }
+                    )
 
-            request.session["phone"] = phone
+                    data = {
+                        # gives an error code stating the user phone number
+                        "status": status.HTTP_302_FOUND,
+                        "phone": phone,
+                        "message": "This repayment transaction already exist do you want to proceed?"
+                    }
 
-            return Response(data, status=status.HTTP_201_CREATED)
+                    request.session["phone"] = phone
+
+                    return Response(data, status=status.HTTP_201_CREATED)
+                else:
+                    LoanRepayment.objects.create(
+                        user=user,
+                        phone=phone,
+                        amount=amount,
+                        remita_mandate_id=remita_mandate_id,
+                        payment_date=payment_date,
+                        payment_method=payment_method,
+                        internal=get_manadate_date["data"]["internal_branch"],
+                        external=get_manadate_date["data"]["external_branch"],
+                        branch_name=get_manadate_date["data"]["branch_name"]
+                    )
+
+                    data = {
+                        "status": status.HTTP_201_CREATED,
+                        "message": "repayment created"
+                    }
+
+                    return Response(data, status=status.HTTP_201_CREATED)
+
         else:
-            LoanRepayment.objects.create(
-                user=user,
-                phone=phone,
-                amount=amount,
-                remita_mandate_id=remita_mandate_id,
-                payment_date=payment_date,
-                payment_method=payment_method
-            )
-
             data = {
-                "status": status.HTTP_201_CREATED,
-                "message": "repayment created"
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "message": "Internal server error"
             }
-
-            return Response(data, status=status.HTTP_201_CREATED)
-
-            # This is passed into session and will be decided by the user to proceed of not 
+            return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get(self, request):
         queryset = self.get_queryset()
@@ -246,7 +273,7 @@ def approved_repayment(request):
 
     if request.method == "GET":
         approved = LoanRepayment.objects.filter(
-            is_approved=True, is_mandate_closed=False)
+            is_approved=True, is_mandate_closed=False, repayment_posted=False)
         serializer = RepaymentSerializer(approved, many=True)
 
         print(serializer.data)
@@ -260,6 +287,7 @@ def approved_repayment(request):
 def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
+        data = []
         serializer = RepaymentSerializer(pending, many=True)
 
         print(serializer.data)
@@ -358,3 +386,36 @@ class ListUsers(APIView):
         """
         usernames = [user.email for user in CustomUser.objects.all()]
         return Response(usernames)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class UpdateApprovedPayment(generics.CreateAPIView):
+    authentication_classes = []
+    permission_classes = []
+    """
+        This endpoint update approved payment db after repayment have been posted to the mandates branch
+    """
+    serializer_class = UpdateAprrovedPaymentSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        mandate = serializer.validated_data.get("mandate")
+        phone = serializer.validated_data.get("phone")
+
+        try:
+            get_loan_repayment = LoanRepayment.objects.get(
+                phone=phone, remita_mandate_id=mandate)
+        except:
+            get_loan_repayment = None
+
+        if get_loan_repayment:
+            get_loan_repayment.repayment_posted = True
+            get_loan_repayment.save()
+
+        data = {
+            "status": status.HTTP_200_OK
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
