@@ -24,6 +24,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
+from django.db.models import Count
 
 
 
@@ -263,6 +264,7 @@ def pending_repayment(request):
         serializer = RepaymentSerializer(pending, many=True)
 
         print(serializer.data)
+
         return Response(serializer.data)
 
 
