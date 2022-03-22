@@ -39,7 +39,7 @@ class LoanRepayment(models.Model):
     payment_method = models.CharField(max_length=100, default="Transfer")
     is_mandate_closed = models.BooleanField(default=False)
     is_duplicate = models.BooleanField(default=False)
-    internal =  models.BooleanField(default=False)
+    internal = models.BooleanField(default=False)
     external = models.BooleanField(default=False)
     # branch_name= models.CharField(max_length=25)
 
