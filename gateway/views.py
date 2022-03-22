@@ -25,6 +25,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from django.db.models import Count
+from gateway.helpers.loandisk_helpers import check_mandate_branch
 
 
 # for corsheaders issue on the frontend
