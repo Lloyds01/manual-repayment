@@ -52,3 +52,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email']
+
+
+class UpdateAprrovedPaymentSerializer(serializers.Serializer):
+    mandate = serializers.CharField()
+    phone = serializers.CharField()
