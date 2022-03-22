@@ -22,7 +22,7 @@ class PostRepaymentSerializer(serializers.Serializer):
 class RepaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanRepayment
-        fields = ["user", "id", "phone", "amount",
+        fields = ["username", "id", "phone", "amount",
                   "remita_mandate_id", "payment_date", "payment_method"]
 
 
@@ -52,3 +52,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email']
+
+
+class UpdateAprrovedPaymentSerializer(serializers.Serializer):
+    mandate = serializers.CharField()
+    phone = serializers.CharField()
