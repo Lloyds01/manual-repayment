@@ -17,7 +17,6 @@ class Jwt(models.Model):
 
 class LoanRepayment(models.Model):
 
-    
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     amount = models.FloatField(default=0.0)
@@ -41,6 +40,11 @@ class LoanRepayment(models.Model):
     @property
     def username(self):
         return self.user.name
+
+    @property
+    def total_pending_approval(self):
+        return LoanRepayment.objects.filter(is_approved=False).count()
+
 
 class Merge(models.Model):
     payment_id = models.CharField(max_length=225)

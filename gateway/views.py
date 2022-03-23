@@ -58,7 +58,12 @@ class LoginView(APIView):
             data = {
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
-                "token": token.key
+                "token": token.key,
+                "data": {
+                    "pending_repayment": LoanRepayment.objects.filter(is_approved=False).count(),
+                    "approved_repayment": LoanRepayment.objects.filter(is_approved=True).count(),
+                    "all_repayment": LoanRepayment.objects.all().count()
+                }
             }
             # return the email and token
             return Response(data, status=status.HTTP_200_OK)
@@ -289,7 +294,7 @@ def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
         data = []
-        
+
         serializer = RepaymentSerializer(pending, many=True)
 
         print(serializer.data)
