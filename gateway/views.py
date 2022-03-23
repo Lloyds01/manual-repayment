@@ -125,7 +125,7 @@ class Repayment(generics.ListCreateAPIView):
             if get_manadate_date["status"] == 400:
                 data = {
                     "status": status.HTTP_400_BAD_REQUEST,
-                    "message": "Invalid mandate. please verify this mandate and post again"
+                    "error": "Invalid mandate. please verify this mandate and post again"
                 }
                 return Response(data)
 
