@@ -1,4 +1,3 @@
-from distutils.log import error
 import email
 from logging import raiseExceptions
 import random
@@ -125,7 +124,7 @@ class Repayment(generics.ListCreateAPIView):
         if type(get_manadate_date) == dict:
             if get_manadate_date["status"] == 400:
                 data = {
-                    "status": "error",
+                    "status": status.HTTP_400_BAD_REQUEST,
                     "message": "Invalid mandate. please verify this mandate and post again"
                 }
                 return Response(data, status=status.HTTP_400_BAD_REQUEST)
