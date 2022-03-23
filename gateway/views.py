@@ -127,7 +127,7 @@ class Repayment(generics.ListCreateAPIView):
                     "status": status.HTTP_400_BAD_REQUEST,
                     "message": "Invalid mandate. please verify this mandate and post again"
                 }
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data)
 
             elif get_manadate_date["status"] == 200:
                 if check_repayment:
@@ -289,6 +289,7 @@ def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
         data = []
+
         serializer = RepaymentSerializer(pending, many=True)
 
         print(serializer.data)
