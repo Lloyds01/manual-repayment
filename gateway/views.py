@@ -56,9 +56,15 @@ class LoginView(APIView):
             # create a token for user for identification
             token, created = Token.objects.get_or_create(user=user)
             data = {
+                "designation":user.is_staff,
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
-                "token": token.key
+                "token": token.key,
+                "data": {
+                    "pending_repayment": LoanRepayment.objects.filter(is_approved=False).count(),
+                    "approved_repayment": LoanRepayment.objects.filter(is_approved=True).count(),
+                    "all_repayment": LoanRepayment.objects.all().count()
+                }
             }
             # return the email and token
             return Response(data, status=status.HTTP_200_OK)
@@ -289,7 +295,7 @@ def pending_repayment(request):
     if request.method == "GET":
         pending = LoanRepayment.objects.filter(is_approved=False)
         data = []
-        
+
         serializer = RepaymentSerializer(pending, many=True)
 
         print(serializer.data)
@@ -422,3 +428,15 @@ class UpdateApprovedPayment(generics.CreateAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def all_repayment(request):
+    if request.method == "GET":
+        repayment = LoanRepayment.objects.all()
+        serializer = RepaymentSerializer(repayment, many=True)
+
+        return Response(serializer.data)
