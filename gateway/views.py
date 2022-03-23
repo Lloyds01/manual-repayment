@@ -56,6 +56,7 @@ class LoginView(APIView):
             # create a token for user for identification
             token, created = Token.objects.get_or_create(user=user)
             data = {
+                "designation":user.is_staff,
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
                 "token": token.key,
@@ -427,3 +428,15 @@ class UpdateApprovedPayment(generics.CreateAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def all_repayment(request):
+    if request.method == "GET":
+        repayment = LoanRepayment.objects.all()
+        serializer = RepaymentSerializer(repayment, many=True)
+
+        return Response(serializer.data)

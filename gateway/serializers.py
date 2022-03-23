@@ -10,7 +10,6 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
-
 class PostRepaymentSerializer(serializers.Serializer):
     phone = serializers.CharField()
     amount = serializers.FloatField()
