@@ -422,3 +422,15 @@ class UpdateApprovedPayment(generics.CreateAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def all_repayment(request):
+    if request.method == "GET":
+        repayment = LoanRepayment.objects.all()
+        serializer = RepaymentSerializer(repayment, many=True)
+
+        return Response(serializer.data)
