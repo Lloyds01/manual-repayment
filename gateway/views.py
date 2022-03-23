@@ -278,7 +278,6 @@ def approved_repayment(request):
             is_approved=True, is_mandate_closed=False, repayment_posted=False)
         serializer = RepaymentSerializer(approved, many=True)
 
-        print(serializer.data)
         return Response(serializer.data)
 
 
@@ -292,8 +291,6 @@ def pending_repayment(request):
         data = []
         
         serializer = RepaymentSerializer(pending, many=True)
-
-        print(serializer.data)
 
         return Response(serializer.data)
 
