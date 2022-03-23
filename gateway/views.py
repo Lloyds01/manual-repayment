@@ -56,6 +56,7 @@ class LoginView(APIView):
             # create a token for user for identification
             token, created = Token.objects.get_or_create(user=user)
             data = {
+                "designation":user.is_staff,
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
                 "token": token.key
