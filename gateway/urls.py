@@ -20,6 +20,6 @@ urlpatterns = [
     path('api/users/', ListUsers.as_view()),
     path('all_repayment/',all_repayment),
     path('update_approved_payment/', UpdateApprovedPayment.as_view()),
-    path('pending_repayment_sheet/', PendingRepaymentSheet.as_view()),
+    path('upload_csv/', PendingRepaymentSheet.as_view()),
 
 ]
