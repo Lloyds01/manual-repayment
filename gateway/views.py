@@ -28,6 +28,8 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from django.db.models import Count
 from gateway.helpers.loandisk_helpers import check_mandate_branch
+import pandas as pd
+import io
 
 
 # for corsheaders issue on the frontend
@@ -58,7 +60,7 @@ class LoginView(APIView):
             # create a token for user for identification
             token, created = Token.objects.get_or_create(user=user)
             data = {
-                "designation":user.is_staff,
+                "designation": user.is_staff,
                 "status": status.HTTP_200_OK,
                 "user_email": user.email,
                 "token": token.key,
@@ -108,11 +110,6 @@ class Repayment(generics.ListCreateAPIView):
         payment_method = serializer.validated_data.get('payment_method')
 
         pay_date = payment_date
-
-        print(f"payment date :::::::::::::::: {payment_date}")
-
-        print(
-            f"\n\n\n\n ::::::::::::::::::::::::::::::: date coming for frontend {payment_date} \n\n\n\n\n")
 
         check_repayment = LoanRepayment.objects.filter(
             remita_mandate_id=remita_mandate_id, amount=amount, payment_date=pay_date)
@@ -441,72 +438,41 @@ def all_repayment(request):
         return Response(serializer.data)
 
 
-@api_view(['POST'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-@permission_classes((IsAuthenticated,))
-def upload_csv(request):
-    if request.method == "POST":
-        serializer = Csvserializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        serializer=Csvserializer()
-        obj = Csv.objects.get(activated=False)
-        with open(obj.file_name.path, 'r') as f:
-            reader = csv.reader(f)
+@method_decorator(csrf_exempt, name="dispatch")
+class PendingRepaymentSheet(generics.CreateAPIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FileUploadSerializer
 
-            for i, row in enumerate(reader):
-                if i == 0:
-                    pass
-                else:
-                    row = "".join(row)
-                    row = row.replace(":", " ")
-                    row = row.split()
-                    file = row[1]
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        file = serializer.validated_data["file"]
+
+        user = CustomUser.objects.get(email=request.user.email)
+
+        decoded_file = file.read().decode()
+        io_string = io.StringIO(decoded_file)
+        df = pd.read_csv(io_string, dtype={"phone": str})
+
+        for index, row in df.iterrows():
+            phone = row["phone"]
+            mandate = row["mandate"]
+            get_manadate_date = check_mandate_branch(mandate, phone)
+            if type(get_manadate_date) == dict:
+                if get_manadate_date["status"] == 400:
                     LoanRepayment.objects.create(
-                        phone = file,
-                        amount = int(row[2]),
-                        remita_mandate_id = int(row[3]),
-                        payment_date = datetime(row[4]),
-                        payment_method = str(row[5])
+                        user=user,
+                        phone=phone,
+                        amount=row["amount"],
+                        remita_mandate_id=mandate,
+                        internal=get_manadate_date["data"]["internal_branch"],
+                        external=get_manadate_date["data"]["external_branch"],
+                        branch_name=get_manadate_date["data"]["branch_name"],
+                        is_duplicate=True,
 
                     )
 
-# @api_view(['POST'])
-# @permission_classes((IsAuthenticated,))
-# # @parser_classes([MultiPartParser])
-# def upload_csv(request):
-    	
-#     try:
-#         csv_file = request.FILES["csv_file"]
-#         # group_id    = request.POST.get("group")
+        data = {"status": 200}
 
-#         if not csv_file.name.endswith('.csv'):
-#             response = {"message":'File is not CSV type'}
-
-#             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-
-#         #if file is too large, return
-#         if csv_file.multiple_chunks():
-#             response = "Uploaded file is too big (%.2f MB)." % (csv_file.size/(1000*1000),)
-#             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-
-#         result = LoanRepayment.process_contacts_from_csv(csv_file)
-        
-#         if result:
-
-#             LoanRepayment.add_contacts(result['contacts'])
-
-#         response = {
-#                     "message":'Contacts added',
-#                     "errors": result["errors"],
-#                     "added": result["total_added"]
-#                     }
-
-#         return Response(data=response, status=status.HTTP_202_ACCEPTED)
-
-#     except Exception as e:
-
-#         response = {"message":'Processing Error : '+repr(e)}
-
-#         return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data=data, status=status.HTTP_200_OK)

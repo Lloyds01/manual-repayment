@@ -58,7 +58,9 @@ class UpdateAprrovedPaymentSerializer(serializers.Serializer):
     mandate = serializers.CharField()
     phone = serializers.CharField()
 
-class Csvserializer(serializers.ModelSerializer):
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
     class Meta:
-        model = Csv
-        fields =["file_name"]
+        fields = ("file",)
