@@ -18,7 +18,8 @@ urlpatterns = [
     path('approve_all/', Approve_all),
     path('confirm_duplicate/', ConfirmDuplicateRepayment.as_view()),
     path('api/users/', ListUsers.as_view()),
+    path('all_repayment/',all_repayment),
     path('update_approved_payment/', UpdateApprovedPayment.as_view()),
-    path('all_repayment/',all_repayment)
+    path('pending_repayment_sheet/', PendingRepaymentSheet.as_view()),
 
 ]

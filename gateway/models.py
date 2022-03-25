@@ -1,7 +1,9 @@
+import io
 from os import stat
 from django.db import models
 from repayment.models import CustomUser
 from rest_framework.response import Response
+# import pandas as pd
 
 # Create your models here.
 
@@ -45,6 +47,27 @@ class LoanRepayment(models.Model):
     def total_pending_approval(self):
         return LoanRepayment.objects.filter(is_approved=False).count()
 
+    # @staticmethod
+    # def process_repayment_from_csv(csv_file):
+
+    #     file_data = csv_file.read()
+    #     df = pd.read_csv(io.BytesIO(file_data), header=None,
+    #                      usecols=[4], names=["contacts"], dtype="O")
+    #     df["repayment"] = df["amount","payment_method","payment_date","remita_mandate_id","phone"].str[-10:]
+        
+        
+    #     return dict(contacts = good_numbers["trimmed"].to_list(), errors = fixes_required, total_added = total_added)
+
+    # @staticmethod
+    # def add_contacts(group, numbers: list):
+
+    #     contacts = map(lambda number: Contact(
+    #         mobile_number=number, group_id=group), numbers)
+    #     Contact.objects.bulk_create(contacts)
+
+    #     return True
+
+
 
 class Merge(models.Model):
     payment_id = models.CharField(max_length=225)
@@ -52,3 +75,11 @@ class Merge(models.Model):
     is_staff = models.BooleanField()
     is_approved = models.BooleanField()
     is_approved_all = models.BooleanField()
+
+class Csv(models.Model):
+    file_name = models.FileField(upload_to="csvs")
+    uploaded =models.DateTimeField(auto_now_add=True)
+    activated = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.file_name

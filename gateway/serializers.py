@@ -1,6 +1,7 @@
+from dataclasses import field
 from xml.parsers.expat import model
 from rest_framework.response import Response
-from gateway.models import LoanRepayment, Merge
+from gateway.models import Csv, LoanRepayment, Merge
 from rest_framework import serializers
 from repayment.models import CustomUser
 from django.contrib.auth.models import User
@@ -56,3 +57,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UpdateAprrovedPaymentSerializer(serializers.Serializer):
     mandate = serializers.CharField()
     phone = serializers.CharField()
+
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    class Meta:
+        fields = ("file",)
