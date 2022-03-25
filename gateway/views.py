@@ -1,4 +1,6 @@
+import csv
 import email
+import enum
 from logging import raiseExceptions
 import random
 import stat
@@ -437,3 +439,74 @@ def all_repayment(request):
         serializer = RepaymentSerializer(repayment, many=True)
 
         return Response(serializer.data)
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+@permission_classes((IsAuthenticated,))
+def upload_csv(request):
+    if request.method == "POST":
+        serializer = Csvserializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer=Csvserializer()
+        obj = Csv.objects.get(activated=False)
+        with open(obj.file_name.path, 'r') as f:
+            reader = csv.reader(f)
+
+            for i, row in enumerate(reader):
+                if i == 0:
+                    pass
+                else:
+                    row = "".join(row)
+                    row = row.replace(":", " ")
+                    row = row.split()
+                    file = row[1]
+                    LoanRepayment.objects.create(
+                        phone = file,
+                        amount = int(row[2]),
+                        remita_mandate_id = int(row[3]),
+                        payment_date = datetime(row[4]),
+                        payment_method = str(row[5])
+
+                    )
+
+# @api_view(['POST'])
+# @permission_classes((IsAuthenticated,))
+# # @parser_classes([MultiPartParser])
+# def upload_csv(request):
+    	
+#     try:
+#         csv_file = request.FILES["csv_file"]
+#         # group_id    = request.POST.get("group")
+
+#         if not csv_file.name.endswith('.csv'):
+#             response = {"message":'File is not CSV type'}
+
+#             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+
+#         #if file is too large, return
+#         if csv_file.multiple_chunks():
+#             response = "Uploaded file is too big (%.2f MB)." % (csv_file.size/(1000*1000),)
+#             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+
+#         result = LoanRepayment.process_contacts_from_csv(csv_file)
+        
+#         if result:
+
+#             LoanRepayment.add_contacts(result['contacts'])
+
+#         response = {
+#                     "message":'Contacts added',
+#                     "errors": result["errors"],
+#                     "added": result["total_added"]
+#                     }
+
+#         return Response(data=response, status=status.HTTP_202_ACCEPTED)
+
+#     except Exception as e:
+
+#         response = {"message":'Processing Error : '+repr(e)}
+
+#         return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
