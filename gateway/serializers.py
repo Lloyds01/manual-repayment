@@ -56,3 +56,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UpdateAprrovedPaymentSerializer(serializers.Serializer):
     mandate = serializers.CharField()
     phone = serializers.CharField()
+
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    class Meta:
+        fields = ("file",)
