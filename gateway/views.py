@@ -389,8 +389,21 @@ class ListUsers(APIView):
         """
         Return a list of all users.
         """
-        usernames = [user.email for user in CustomUser.objects.all()]
-        return Response(usernames)
+        # usernames = [user.email for user in CustomUser.objects.all()]
+        data = []
+        usernames = CustomUser.objects.all()
+        for user in usernames:    
+            data.append(
+                {
+                    "id":user.id,
+                    "name":user.name,
+                    "designation":user.designation,
+                    "user":user.email
+                }
+            )
+
+        
+        return Response(data, status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
