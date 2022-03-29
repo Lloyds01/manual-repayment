@@ -30,8 +30,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['https://manual-repayment.herokuapp.com/',
-                 'manual-repayment.herokuapp.com', '*']
+ALLOWED_HOSTS = ['164.92.209.144']
 
 
 # Application definition
